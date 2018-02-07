@@ -1,0 +1,101 @@
+stack size              (kbytes, -s) unlimited
+Data size: 16	Block Size: 1024
+SUCCESSFUL: with just thread sync:- time = 0.067840
+SUCCESSFUL: with just thread sync with Interleaved Access:- time = 0.039968
+SUCCESSFUL: with just thread sync and shared memory:- time = 0.031360
+SUCCESSFUL: with just thread sync and shared memory with Interleaved Access:- time = 0.033888
+SUCCESSFUL: with just thread 0 of every block computing:- time = 0.071104
+SUCCESSFUL: with just thread 0 of every block computing using shared memory:- time = 0.062880
+____________________________________________________________________
+
+
+Data size: 93	Block Size: 1024
+SUCCESSFUL: with just thread sync:- time = 0.059616
+SUCCESSFUL: with just thread sync with Interleaved Access:- time = 0.034944
+SUCCESSFUL: with just thread sync and shared memory:- time = 0.027008
+SUCCESSFUL: with just thread sync and shared memory with Interleaved Access:- time = 0.031616
+SUCCESSFUL: with just thread 0 of every block computing:- time = 0.068512
+SUCCESSFUL: with just thread 0 of every block computing using shared memory:- time = 0.059488
+____________________________________________________________________
+
+
+Data size: 1120	Block Size: 1024
+SUCCESSFUL: with just thread sync:- time = 0.056576
+SUCCESSFUL: with just thread sync with Interleaved Access:- time = 0.033568
+SUCCESSFUL: with just thread sync and shared memory:- time = 0.027232
+SUCCESSFUL: with just thread sync and shared memory with Interleaved Access:- time = 0.031648
+SUCCESSFUL: with just thread 0 of every block computing:- time = 0.067968
+SUCCESSFUL: with just thread 0 of every block computing using shared memory:- time = 0.058528
+____________________________________________________________________
+
+
+Data size: 1233	Block Size: 1024
+SUCCESSFUL: with just thread sync:- time = 0.055872
+SUCCESSFUL: with just thread sync with Interleaved Access:- time = 0.034560
+SUCCESSFUL: with just thread sync and shared memory:- time = 0.027072
+SUCCESSFUL: with just thread sync and shared memory with Interleaved Access:- time = 0.031104
+SUCCESSFUL: with just thread 0 of every block computing:- time = 0.068608
+SUCCESSFUL: with just thread 0 of every block computing using shared memory:- time = 0.058752
+____________________________________________________________________
+
+
+Data size: 4098	Block Size: 1024
+SUCCESSFUL: with just thread sync:- time = 0.058336
+SUCCESSFUL: with just thread sync with Interleaved Access:- time = 0.034496
+SUCCESSFUL: with just thread sync and shared memory:- time = 0.028896
+SUCCESSFUL: with just thread sync and shared memory with Interleaved Access:- time = 0.031616
+SUCCESSFUL: with just thread 0 of every block computing:- time = 0.068096
+SUCCESSFUL: with just thread 0 of every block computing using shared memory:- time = 0.058688
+____________________________________________________________________
+
+
+Data size: 9921	Block Size: 1024
+SUCCESSFUL: with just thread sync:- time = 0.068000
+SUCCESSFUL: with just thread sync with Interleaved Access:- time = 0.038976
+SUCCESSFUL: with just thread sync and shared memory:- time = 0.025568
+SUCCESSFUL: with just thread sync and shared memory with Interleaved Access:- time = 0.030752
+SUCCESSFUL: with just thread 0 of every block computing:- time = 0.067584
+SUCCESSFUL: with just thread 0 of every block computing using shared memory:- time = 0.059840
+____________________________________________________________________
+
+
+Data size: 12123	Block Size: 1024
+SUCCESSFUL: with just thread sync:- time = 0.056640
+SUCCESSFUL: with just thread sync with Interleaved Access:- time = 0.033120
+SUCCESSFUL: with just thread sync and shared memory:- time = 0.025792
+SUCCESSFUL: with just thread sync and shared memory with Interleaved Access:- time = 0.029280
+SUCCESSFUL: with just thread 0 of every block computing:- time = 0.066272
+SUCCESSFUL: with just thread 0 of every block computing using shared memory:- time = 0.057600
+____________________________________________________________________
+
+
+Data size: 25934	Block Size: 1024
+SUCCESSFUL: with just thread sync:- time = 0.057984
+SUCCESSFUL: with just thread sync with Interleaved Access:- time = 0.037600
+SUCCESSFUL: with just thread sync and shared memory:- time = 0.022720
+SUCCESSFUL: with just thread sync and shared memory with Interleaved Access:- time = 0.027360
+SUCCESSFUL: with just thread 0 of every block computing:- time = 0.064256
+SUCCESSFUL: with just thread 0 of every block computing using shared memory:- time = 0.054880
+____________________________________________________________________
+
+
+Data size: 33455	Block Size: 1024
+SUCCESSFUL: with just thread sync:- time = 0.056512
+SUCCESSFUL: with just thread sync with Interleaved Access:- time = 0.030656
+SUCCESSFUL: with just thread sync and shared memory:- time = 0.023904
+SUCCESSFUL: with just thread sync and shared memory with Interleaved Access:- time = 0.028224
+SUCCESSFUL: with just thread 0 of every block computing:- time = 0.064864
+SUCCESSFUL: with just thread 0 of every block computing using shared memory:- time = 0.062464
+____________________________________________________________________
+
+
+Data size: 52123	Block Size: 1024
+SUCCESSFUL: with just thread sync:- time = 0.049024
+SUCCESSFUL: with just thread sync with Interleaved Access:- time = 0.029600
+SUCCESSFUL: with just thread sync and shared memory:- time = 0.031680
+SUCCESSFUL: with just thread sync and shared memory with Interleaved Access:- time = 0.028000
+SUCCESSFUL: with just thread 0 of every block computing:- time = 0.072448
+SUCCESSFUL: with just thread 0 of every block computing using shared memory:- time = 0.055136
+____________________________________________________________________
+
+
