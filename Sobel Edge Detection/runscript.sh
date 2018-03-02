@@ -14,12 +14,7 @@
 ##SBATCH --mail-user=<YOUR EMAIL>
 ##SBATCH --mail-type=END
 ulimit -c unlimited -s
-./sobeledgeSharedUnroll
-./sobeledgeSharedUnroll
-./sobeledgeSharedUnroll
-./sobeledgeSharedUnroll
-./sobeledgeSharedUnroll
-./sobeledgeSharedUnroll
+./sobeledge
 #cuda-memcheck ./sobeledgeSharedUnroll BWstop-sign.ppm 4000
 #cuda-memcheck ./sobeledgeSharedUnroll BWstop-sign.ppm 4000
 #cuda-memcheck ./sobeledgeShared

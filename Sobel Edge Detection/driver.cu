@@ -9,6 +9,7 @@
 
 #define _TILESIZE_ 30
 #define _TILESIZE_2 32
+#define _UNROLL_ 2
 
 //#define DEFAULT_FILENAME "BWstop-sign.ppm"
 #define DEFAULT_FILENAME "mountains.ppm"
@@ -376,9 +377,9 @@ __global__ void sobelEdgeDetectionSharedMemUnrollControlFlow(int *input, int *ou
 __global__ void sobelEdgeDetectionSharedMemUnroll(int *input, int *output, int width, int height, int thresh) {
 
   __shared__ int shMem[4 * _TILESIZE_2 * _TILESIZE_2 ];
-
-  unsigned int size = 2 * _TILESIZE_2;
-  int num = 2;
+  
+  int num = _UNROLL_;
+  int size = num * _TILESIZE_2;
 
   int i = blockIdx.x * num * _TILESIZE_ + threadIdx.x * num;
   int j = blockIdx.y * num * _TILESIZE_ + threadIdx.y * num;
@@ -429,9 +430,9 @@ __global__ void sobelEdgeDetectionSharedMemOverlap(int *input, int *output, int 
 
   static __shared__ int shMem[_TILESIZE_2 * _TILESIZE_2];
 
-  unsigned int blocksize = _TILESIZE_2;
-  int i = blockIdx.x * (blocksize - 2) + threadIdx.x;
-  int j = blockIdx.y * (blocksize - 2) + threadIdx.y;
+  int blocksize = _TILESIZE_2;
+  int i = blockIdx.x * (_TILESIZE_) + threadIdx.x;
+  int j = blockIdx.y * (_TILESIZE_) + threadIdx.y;
   int index = j * width + i;
 
   int xind = threadIdx.x;
@@ -443,12 +444,12 @@ __global__ void sobelEdgeDetectionSharedMemOverlap(int *input, int *output, int 
   if ( xind > 0 && yind > 0 && xind < (blocksize - 1) && yind < (blocksize - 1))
   {
     
-    int sum1 = shMem[xind+1 + blocksize * (yind-1)] -     shMem[xind-1 + blocksize * (yind-1)]
-         + 2 * shMem[xind+1 + blocksize * (yind  )] - 2 * shMem[xind-1 + blocksize * (yind  )]
-         +     shMem[xind+1 + blocksize * (yind+1)] -     shMem[xind-1 + blocksize * (yind+1)];
+    int sum1 = shMem[xind + 1 + blocksize * (yind - 1)] -     shMem[xind - 1 + blocksize * (yind - 1)]
+         + 2 * shMem[xind + 1 + blocksize * (yind    )] - 2 * shMem[xind - 1 + blocksize * (yind    )]
+         +     shMem[xind + 1 + blocksize * (yind + 1)] -     shMem[xind - 1 + blocksize * (yind + 1)];
 
-    int sum2 = shMem[xind-1 + blocksize * (yind-1)] + 2 * shMem[xind + blocksize * (yind-1)] + shMem[xind+1 + blocksize * (yind-1)]
-             - shMem[xind-1 + blocksize * (yind+1)] - 2 * shMem[xind + blocksize * (yind+1)] - shMem[xind+1 + blocksize * (yind+1)];
+    int sum2 = shMem[xind - 1 + blocksize * (yind - 1)] + 2 * shMem[xind     + blocksize * (yind - 1)] + shMem[xind + 1 + blocksize * (yind - 1)]
+             - shMem[xind - 1 + blocksize * (yind + 1)] - 2 * shMem[xind     + blocksize * (yind + 1)] - shMem[xind + 1 + blocksize * (yind + 1)];
 
     int magnitude = sum1 * sum1 + sum2 * sum2;
     if(magnitude > thresh)
@@ -456,6 +457,60 @@ __global__ void sobelEdgeDetectionSharedMemOverlap(int *input, int *output, int 
     else
       output[index] = 0;
   }
+}
+
+__global__ void sobelEdgeDetectionSharedMemUnrollCoalsed(int *input, int *output, int width, int height, int thresh) {
+
+  __shared__ int shMem[4 * _TILESIZE_2 * _TILESIZE_2 ];
+  
+  int num = _UNROLL_;
+  int size = num * _TILESIZE_2;
+
+  int i = blockIdx.x * (num * _TILESIZE_) + threadIdx.x;
+  int j = blockIdx.y * (num * _TILESIZE_) + threadIdx.y;
+
+  int xind = threadIdx.x;
+  int yind = threadIdx.y;
+
+  for(int x = 0; x < num; x++)
+  {
+    for(int y = 0; y < num; y++)
+    {
+      int xOffset = x * (_TILESIZE_), yOffset = y * (_TILESIZE_);
+      shMem[ size * (yind + yOffset) + (xind + xOffset)] = input[(j + yOffset) * width + (i + xOffset)];
+    }
+  }
+  
+  __syncthreads();
+
+  if (i < width - _TILESIZE_ && j < height - _TILESIZE_ && xind > 0 && yind > 0 && xind < (_TILESIZE_2 - 1) && yind < (_TILESIZE_2 - 1))
+  {
+    for(int x = 0; x < num; x++)
+    {
+      for(int y = 0; y < num; y++)
+      { 
+        int xOffset = x * _TILESIZE_, yOffset = y * _TILESIZE_;
+
+        int sum1 = shMem[(xind + 1 + xOffset) + size * (yind - 1 + yOffset)] -     shMem[(xind - 1 + xOffset) + size * (yind - 1 + yOffset)]
+             + 2 * shMem[(xind + 1 + xOffset) + size * (yind     + yOffset)] - 2 * shMem[(xind - 1 + xOffset) + size * (yind     + yOffset)]
+             +     shMem[(xind + 1 + xOffset) + size * (yind + 1 + yOffset)] -     shMem[(xind - 1 + xOffset) + size * (yind + 1 + yOffset)];
+
+        int sum2 = shMem[(xind - 1 + xOffset) + size * (yind - 1 + yOffset)] + 2 * shMem[(xind     + xOffset) + size * (yind - 1 + yOffset)] + shMem[(xind + 1 + xOffset) + size * (yind - 1 + yOffset)]
+                 - shMem[(xind - 1 + xOffset) + size * (yind + 1 + yOffset)] - 2 * shMem[(xind     + xOffset) + size * (yind + 1 + yOffset)] - shMem[(xind + 1 + xOffset) + size * (yind + 1 + yOffset)];
+
+        int magnitude = sum1 * sum1 + sum2 * sum2;
+        
+        int index = (j + yOffset) * width + (i + xOffset);
+
+        if(magnitude > thresh)
+          output[index] = 255;
+        else
+          output[index] = 0;
+        
+      }
+    } 
+  }
+
 }
 
 int main(int argc, char **argv) {
@@ -520,73 +575,134 @@ int main(int argc, char **argv) {
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
-  printf ("\n\n~~~~~~ Performace Testing (Shared Unroll) on %s ~~~~~~~~~~\n\n", filename);
-  //printf ("\n\n~~~~~~ Performace Testing (Shared Overlap) on %s ~~~~~~~~~~\n\n", filename);
-  //printf ("\n\n~~~~~~ Performace Testing (Global Memory) on %s ~~~~~~~~~~\n\n", filename);
-  //printf ("\n\n~~~~~~ Performace Testing (Shared Memory) on %s ~~~~~~~~~~\n\n", filename);
-  //printf ("\n\n~~~~~~ Performace Testing (Unroll) on %s ~~~~~~~~~~\n\n", filename);
-  //int i = 0;
-  //for(i; i < 4; i++)
+  char finalFile[50];
+
+  // Global Access
+  // -------------------------------------------------------------------------------------------------------------------------
+  cudaEventRecord(start,0);
   {
-    char finalFile[50];
-    //char ch[2];
-    //ch[0] = i + '0';
-    //ch[1] = '\0';
+    printf ("~~~~~~ Performace Testing (Global) on %s ~~~~~~~~~~\n", filename);
+    strcpy(finalFile, resultFile);
+    strcat(finalFile, "Global");
+    strcat(finalFile, ".ppm");
+    sobelEdgeDetection <<<num_blocks, num_threads_norm>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
+    cudaDeviceSynchronize();
+   
+  }
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);        
+  cudaEventElapsedTime(&elapsed_time,start, stop);
+  
+  cudaMemcpy(result, deviceOutput, imgSize, cudaMemcpyDeviceToHost);
+
+  printf("Elapsed time: %f\n", elapsed_time);
+  write_ppm( finalFile, xsize, ysize, 255, result);
+
+  // Shared Memory Unrolling
+  // -------------------------------------------------------------------------------------------------------------------------
+  cudaEventRecord(start,0);
+  {
+    printf ("~~~~~~ Performace Testing (Shared Unroll) on %s ~~~~~~~~~~\n", filename);
     strcpy(finalFile, resultFile);
     strcat(finalFile, "SharedUnroll");
-    //strcat(finalFile, "SharedOverlap");
-    //strcat(finalFile, "Unroll");
-    //strcat(finalFile, "Global");
-    //strcat(finalFile, "Shared");
     strcat(finalFile, ".ppm");
-
-    cudaEventRecord(start,0);
-   
-    //sobelEdgeDetection <<<num_blocks, num_threads_norm>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
-    //sobelEdgeDetectionSharedMem <<<num_blocks, num_threads_norm>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
-    //sobelEdgeDetectionWithRegisters <<<num_blocks, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);      
-    //sobelEdgeDetectionSharedMemOverlap <<<num_blocks, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
-    //sobelEdgeDetectionSharedMem2 <<<num_blocks_half, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
     sobelEdgeDetectionSharedMemUnroll <<<num_blocks_half, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
-    /*switch(i){
-
-    case 0:
-      printf("~~~~~~~~~~~~~~~ Sobel Edge Detection Basic ~~~~~~~~~~~~\n");
-      func = &sobelEdgeDetection;
-      sobelEdgeDetection <<<num_blocks, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
-      break;
-    case 1:
-      printf("~~~~~~~~~~~~~~~ Sobel Edge Detection With Shared Mem ~~~~~~~~\n");
-      func = &sobelEdgeDetectionSharedMem;
-      sobelEdgeDetectionSharedMem <<<num_blocks, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
-      break;
-    case 2:
-      printf("~~~~~~~~~~~~~~~ Sobel Edge Detection With Registers ~~~~~~~~\n");
-      func = &sobelEdgeDetectionWithRegisters;
-      sobelEdgeDetectionWithRegisters <<<num_blocks, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
-      break;
-    case 3:
-      printf("~~~~~~~~~~~~~~~ Sobel Edge Detection unroll ~~~~~~~~\n");
-      func = &sobelEdgeDetectionSharedMem2;
-      sobelEdgeDetectionSharedMem2 <<<num_blocks, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
-      break;
-    }*/
-    //@@ Launch the GPU Kernel here, you may want multiple implementations to compare
-    //func <<<num_blocks, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
-
     cudaDeviceSynchronize();
-
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);        
-    cudaEventElapsedTime(&elapsed_time,start, stop);
-
-    //@@ Copy the GPU memory back to the CPU here
-    cudaMemcpy(result, deviceOutput, imgSize, cudaMemcpyDeviceToHost);
-
-    printf("Elapsed time: %f\n", elapsed_time);
-    write_ppm( finalFile, xsize, ysize, 255, result);
-  
+   
   }
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);        
+  cudaEventElapsedTime(&elapsed_time,start, stop);
+  
+  cudaMemcpy(result, deviceOutput, imgSize, cudaMemcpyDeviceToHost);
+
+  printf("Elapsed time: %f\n", elapsed_time);
+  write_ppm( finalFile, xsize, ysize, 255, result);
+  
+  // Shared memory overlapping blocks
+  // -------------------------------------------------------------------------------------------------------------------------
+  cudaEventRecord(start,0);
+  {
+    printf ("~~~~~~ Performace Testing (Shared Overlap) on %s ~~~~~~~~~~\n", filename);
+    strcpy(finalFile, resultFile);
+    strcat(finalFile, "SharedOverlap");
+    strcat(finalFile, ".ppm");
+    sobelEdgeDetectionSharedMemOverlap <<<num_blocks, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
+    cudaDeviceSynchronize();
+   
+  }
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);        
+  cudaEventElapsedTime(&elapsed_time,start, stop);
+  
+  cudaMemcpy(result, deviceOutput, imgSize, cudaMemcpyDeviceToHost);
+
+  printf("Elapsed time: %f\n", elapsed_time);
+  write_ppm( finalFile, xsize, ysize, 255, result);
+
+  // Shared memory
+  // -------------------------------------------------------------------------------------------------------------------------
+  cudaEventRecord(start,0);
+  {
+    printf ("~~~~~~ Performace Testing (Shared Memory) on %s ~~~~~~~~~~\n", filename);
+    strcpy(finalFile, resultFile);
+    strcat(finalFile, "Shared");
+    strcat(finalFile, ".ppm");
+    sobelEdgeDetectionSharedMem <<<num_blocks, num_threads_norm>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
+    cudaDeviceSynchronize();
+   
+  }
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);        
+  cudaEventElapsedTime(&elapsed_time,start, stop);
+  
+  cudaMemcpy(result, deviceOutput, imgSize, cudaMemcpyDeviceToHost);
+
+  printf("Elapsed time: %f\n", elapsed_time);
+  write_ppm( finalFile, xsize, ysize, 255, result);
+
+  // Unrolling
+  // -------------------------------------------------------------------------------------------------------------------------
+  cudaEventRecord(start,0);
+  {
+    printf ("~~~~~~ Performace Testing (Unroll) on %s ~~~~~~~~~~\n", filename);
+    strcpy(finalFile, resultFile);
+    strcat(finalFile, "Unroll");
+    strcat(finalFile, ".ppm");
+    sobelEdgeDetectionSharedMem2 <<<num_blocks_half, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
+    cudaDeviceSynchronize();
+   
+  }
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);        
+  cudaEventElapsedTime(&elapsed_time,start, stop);
+  
+  cudaMemcpy(result, deviceOutput, imgSize, cudaMemcpyDeviceToHost);
+
+  printf("Elapsed time: %f\n", elapsed_time);
+  write_ppm( finalFile, xsize, ysize, 255, result);
+
+  // Shared Mem Unrolling (Coalsed)
+  // -------------------------------------------------------------------------------------------------------------------------
+  cudaEventRecord(start,0);
+  {
+    printf ("~~~~~~ Performace Testing (Shared Memory Unroll Coalsed) on %s ~~~~~~~~~~\n", filename);
+    strcpy(finalFile, resultFile);
+    strcat(finalFile, "SharedUnrollCoalsed");
+    strcat(finalFile, ".ppm");
+    sobelEdgeDetectionSharedMemUnrollCoalsed <<<num_blocks_half, num_threads>>> (deviceInput, deviceOutput, xsize, ysize, thresh);
+    cudaDeviceSynchronize();
+   
+  }
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);        
+  cudaEventElapsedTime(&elapsed_time,start, stop);
+  
+  cudaMemcpy(result, deviceOutput, imgSize, cudaMemcpyDeviceToHost);
+
+  printf("Elapsed time: %f\n", elapsed_time);
+  write_ppm( finalFile, xsize, ysize, 255, result);
+
 
   printf("_________________________________________________________________________________\n\n\n");
   
