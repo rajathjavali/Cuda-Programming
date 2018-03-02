@@ -1,0 +1,21 @@
+stack size              (kbytes, -s) unlimited
+read_ppm( mountains.ppm )
+read 3 things   width 5350  height 3567  maxval 255
+255 found at offset 13
+Texture mountains.ppm   read 57250350 of 57250350 bytes
+width 5350 height 3567 imgsize 76333800
+~~~~~~ Performace Testing (Global) on mountains.ppm ~~~~~~~~~~
+Elapsed time: 0.738816
+~~~~~~ Performace Testing (Shared Unroll) on mountains.ppm ~~~~~~~~~~
+Elapsed time: 0.482848
+~~~~~~ Performace Testing (Shared Overlap) on mountains.ppm ~~~~~~~~~~
+Elapsed time: 0.520576
+~~~~~~ Performace Testing (Shared Memory) on mountains.ppm ~~~~~~~~~~
+Elapsed time: 0.752992
+~~~~~~ Performace Testing (Unroll) on mountains.ppm ~~~~~~~~~~
+Elapsed time: 0.566560
+~~~~~~ Performace Testing (Shared Memory Unroll Coalsed) on mountains.ppm ~~~~~~~~~~
+Elapsed time: 0.347328
+_________________________________________________________________________________
+
+
